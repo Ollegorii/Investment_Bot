@@ -16,7 +16,7 @@ class Stock(Instrument, VkInterface, TgInterface):
     def Vk_draw(self):
         pass
 
-    def get_money(self):
+    def get_stock(self):
         return "lots: " + str(self.__amount), self.__name
 
 
