@@ -1,30 +1,34 @@
 from Logic import *
 from User import *
-import pandas as pd
-import numpy as np
-import io
+from tinkoff.invest import Client, RequestError, PortfolioResponse, PositionsResponse, PortfolioPosition
 import matplotlib.pyplot as plt
 SANDBOX_TOKEN = "t.Zx3k_Kx4AoPerZe11E7JRSyuWijNSQ-BClojho6m7PgGsUrVY1FVXk9ayjZV64egufFQZ_DLlpTmFilYPh4y7g"
-
-# df = pd.DataFrame({
-#     'user_id': 845,
-#     'token': 34,
-# })
-# print(df)
-#users = pd.read_csv('Users.csv')
-#t="""user_id,token"""
-#users = pd.read_csv(io.StringIO(t))
-#users1 = users.set_index(['user_id'])
-users = pd.DataFrame({'user_id':[0], 'token':[0]})
-print(users)
-print(users)
-users = users.append({'user_id': 543, 'token': 546}, ignore_index=True)
-print(users)
-users = users.set_index(['user_id'])
-print(users.loc[543])
-#print(any(users.loc[543]))
-df = pd.DataFrame({'value':np.random.random(10000), 'key':range(100, 10100)})
-print(df.head())
-df_with_index = df.set_index(['key'])
-print(df_with_index.head())
-print(df_with_index.loc[10099])
+with Client(SANDBOX_TOKEN) as client:
+    us = User(SANDBOX_TOKEN, client)
+    #us.deposit_usd(563.32)
+    #print(client.sandbox.get_sandbox_portfolio(account_id=us.get_account_id()))
+    #us.sell(us.get_account_id(), 'BBG004730ZJ9', 1)
+    id = us.get_account_id()
+    df = us.get_portfolio(us.get_account_id())
+    print(df)
+    #print(client.instruments.shares())
+    #print(us.search('BBG000BNSZP1')) #MacDonalds
+    #us.buy_limit(account_id=id, figi='BBG0013HGFT4', amount=1, price=70)
+    #us.sell_limit(account_id=id, figi='BBG004730ZJ9', amount=1, price=1)
+    #us.sell(account_id=id, figi='BBG000BNSZP1', amount=1)
+    '''
+    try:
+        us.cancel_order_by_number(account_id=id, number=2)
+    except InputError:
+        print('Номер запроса больше чем их кол-во')
+    '''
+    #us.buy(account_id=id, figi='BBG000BNSZP1', amount=1)
+    print(us.get_orders(account_id=id))
+    us.get_candels('BBG000BNSZP1', day_int=150)
+    #client.market_data.get_last_prices('BBG000BNSZP1')
+    #print(client.market_data.get_last_prices(figi=['BBG000BNSZP1']).last_prices[0].price)
+    #us.buy(account_id=id, figi= 'BBG000BNSZP1', amount=1)
+    #ax = df.plot(x='time', y='close')
+    #plt.show()
+    #SPBXM
+    #BBG002BC7WC5
