@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import pandas as pd
 from typing import List
-
+from User import *
 from Controller import *
 from dcs import UpdateObj
 
@@ -43,9 +43,11 @@ class Logic:
         try:
             users_to_loc = self.__users.set_index(['user_id'])
             token = users_to_loc.loc[chat_id].token
-            # portfolio = #Функция Богдана(token)
-            # self.print_ui(chat_id, portfolio)
-
+            print(token)
+            with Client(token) as client:
+                us = User(token, client)
+                portfolio = us.get_portfolio(account_id=us.get_account_id())
+                self.print_ui(chat_id, portfolio)
         except:
             self.print_ui(chat_id, "Токен оказался недействительным")
 
@@ -59,11 +61,16 @@ class Logic:
         upd = await self.queue.get()
         figi = upd.message.text
         self.print_ui(chat_id, f"Укажи количество бумаг с figi: {figi}, которое ты хочешь купить")
+        upd = await self.queue.get()
+        amount = upd.message.text
         users_to_loc = self.__users.set_index(['user_id'])
         token = users_to_loc.loc[chat_id].token
         try:
-            #Функция Богдана с учетом проверки корректности figi
-            self.print_ui(chat_id, "Бумага успешно куплена, можешь проверять порфтолио")
+            with Client(token) as client:
+                us = User(token, client)
+                us.buy(account_id=us.get_account_id(), figi=figi, amount=int(amount))
+                print('okgsks')
+                self.print_ui(chat_id, "Бумага успешно куплена, можешь проверять порфтолио")
         except:
             self.print_ui(chat_id, "Figi оказался недействительным")
 
@@ -105,7 +112,7 @@ class Logic:
         while True:
             upd = await self.queue.get()
             chat_id = upd.message.chat.id
-            print(upd)
+            #print(upd)
             try:
                 await self.distribution(upd)
             finally:
