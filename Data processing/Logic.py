@@ -48,7 +48,7 @@ class Logic:
             token = users_to_loc.loc[chat_id].token
             with Client(token) as client:
                 us = User(token, client)
-                portfolio = us.get_portfolio(account_id=us.get_account_id())
+                portfolio = us.get_portfolio(account_id=us.get_account_id()).to_string()
                 self.print_ui(chat_id, portfolio)
 
         except:
