@@ -1,14 +1,15 @@
 import asyncio
 import datetime
 import os
+from Controller import *
 
-from Bot import *
+# from Bot import *
 
 
 def run():
     loop = asyncio.get_event_loop()
 
-    bot = Bot("5205698417:AAFeZkm72W8qdzbaYNc_TjDmE2UxEmtWvpw", 1)
+    bot = Controller("5205698417:AAFeZkm72W8qdzbaYNc_TjDmE2UxEmtWvpw", 1)
     try:
         loop.create_task(bot.start())
         print('bot started')
@@ -17,6 +18,5 @@ def run():
         print("\nstopping")
         loop.run_until_complete(bot.stop())
         print('bot stopped')
-
 
 run()

@@ -5,12 +5,12 @@ import aiohttp
 from dcs import GetUpdatesResponse, SendMessageResponse
 
 
-class TgClient:
-    def __init__(self, token: str = ''):
-        self.token = token
+class TgUser:
+    def __init__(self, tg_id: str = ''):
+        self.tg_id = tg_id
 
     def get_url(self, method: str):
-        return f"https://api.telegram.org/bot{self.token}/{method}"
+        return f"https://api.telegram.org/bot{self.tg_id}/{method}"
 
     async def get_me(self) -> dict:
         url = self.get_url("getMe")
@@ -33,7 +33,7 @@ class TgClient:
         res_dict = await self.get_updates(offset=offset, timeout=timeout)
         return GetUpdatesResponse.Schema().load(res_dict)
 
-    async def send_message(self, chat_id: int, text: str) -> SendMessageResponse:
+    async def send_message(self, chat_id: int, text: str) -> object:
         url = self.get_url("sendMessage")
         payload = {
             'chat_id': chat_id,
