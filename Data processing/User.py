@@ -137,22 +137,20 @@ class User:
         '''
         if self.__market == "Tinkoff":
             df = self.get_portfolio(account_id=self.__account_id)
-            rub = df.loc['Рубль'].quantity
-            usd = df.loc['Доллар США'].quantity
-            first_char = self.__data.get_dict()[figi][0]
-            if 65 <= ord(first_char) <= 90 or 97 <= ord(first_char) <= 122:
-                if usd < amount * self.__m_val_to_cur(self.__client.market_data.get_last_prices(figi=[figi]).last_prices[0].price):
-                    raise AmountError
-            elif rub < amount * self.__m_val_to_cur(self.__client.market_data.get_last_prices(figi=[figi]).last_prices[0].price):
+            dict = self.__data.get_dict()
+            if figi not in dict:
+                raise FigiError
+            try:
+                r = self.__client.sandbox.post_sandbox_order(
+                    figi=figi,
+                    quantity=amount,
+                    account_id=account_id,
+                    order_id=datetime.now().strftime("%Y-%m-%dT %H:%M:%S"),
+                    direction=OrderDirection.ORDER_DIRECTION_BUY,
+                    order_type=OrderType.ORDER_TYPE_MARKET
+                )
+            except:
                 raise AmountError
-            r = self.__client.sandbox.post_sandbox_order(
-                figi=figi,
-                quantity=amount,
-                account_id=account_id,
-                order_id=datetime.now().strftime("%Y-%m-%dT %H:%M:%S"),
-                direction=OrderDirection.ORDER_DIRECTION_BUY,
-                order_type=OrderType.ORDER_TYPE_MARKET
-            )
         elif self.__market == "Vtb":
             pass
 
