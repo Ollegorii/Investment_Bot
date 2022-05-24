@@ -9,8 +9,8 @@ from dcs import UpdateObj
 
 class Logic:
     def __init__(self, UI_queue: asyncio.Queue, queue: asyncio.Queue, concurrent_workers: int):
-        self.queue : asyncio.Queue = queue
-        self.__UI_queue : asyncio.Queue = UI_queue
+        self.queue = queue
+        self.__UI_queue = UI_queue
         self.__users = pd.read_csv('Users.csv', usecols=['user_id', 'token'])
         self.concurrent_workers = concurrent_workers
         self._tasks: List[asyncio.Task] = []

@@ -25,13 +25,13 @@ pd.set_option('display.max_colwidth', None)
 
 class User:
     def __init__(self, token : str, client : Client, use_sandbox=True, market = "Tinkoff"):
-        self.__token : str = token
-        self.__use_sandbox : bool = use_sandbox
-        self.__accounts : list = []
-        self.__client : Client = client
-        self.__account_id : str = None
-        self.__market : str = market
-        self.__data : DataInstruments= DataInstruments(client)
+        self.__token = token
+        self.__use_sandbox = use_sandbox
+        self.__accounts = []
+        self.__client = client
+        self.__account_id = None
+        self.__market = market
+        self.__data : DataInstruments = DataInstruments(client)
 
 
     def get_accounts(self):
@@ -130,7 +130,7 @@ class User:
         if self.__market == "Tinkoff":
             p = self.__client.sandbox.get_sandbox_portfolio(account_id=account_id).positions
             df = pd.DataFrame([self.__portfolio_pose_todict(pos) for pos in p])
-            df = df.set_index("Name")
+            df = df.set_index('Name')
             return df
         elif self.__market == "Vtb":
             pass
