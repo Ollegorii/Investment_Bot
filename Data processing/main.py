@@ -25,10 +25,13 @@ with Client(SANDBOX_TOKEN) as client:
     #us.buy(account_id=id, figi='BBG000BNSZP1', amount=1)
     print(us.get_orders(account_id=id))
     us.get_candels('BBG000BNSZP1', day_int=150)
+    print(us.get_all_figies())
+    print(us.df_to_url(df))
     #client.market_data.get_last_prices('BBG000BNSZP1')
     #print(client.market_data.get_last_prices(figi=['BBG000BNSZP1']).last_prices[0].price)
     #us.buy(account_id=id, figi= 'BBG000BNSZP1', amount=1)
     #ax = df.plot(x='time', y='close')
+    #us.cancel_order_by_number(account_id=id, number=3)
     #plt.show()
     #SPBXM
     #BBG002BC7WC5

@@ -1,6 +1,4 @@
 import mplfinance as mpf
-from Cash import *
-from Stock import *
 from decimal import Decimal
 from tinkoff.invest import Client, RequestError, PortfolioResponse, PositionsResponse, PortfolioPosition, OrderDirection, OrderType, MoneyValue, Quotation, InstrumentIdType, CandleInterval, HistoricCandle
 from tinkoff.invest.services import Services
@@ -9,6 +7,10 @@ import pandas as pd
 from datetime import datetime, timedelta
 from DataInstruments import *
 from Errors import *
+import dataframe_image as dfi
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+import os
 import time
 # Сброс ограничений на количество выводимых рядов
 pd.set_option('display.max_rows', None)
@@ -22,15 +24,14 @@ pd.set_option('display.max_colwidth', None)
 #def GenerateFileOfInstruments(client):
 
 class User:
-    def __init__(self, token, client, use_sandbox=True, market = "Tinkoff"):
-        self.__token = token
-        self.__use_sandbox = use_sandbox
-        self.__accounts = []
-        self.__client = client
-        self.__account_id = None
-        self.__instruments = []
-        self.__market = market
-        self.__data = DataInstruments(client)
+    def __init__(self, token : str, client : Client, use_sandbox=True, market = "Tinkoff"):
+        self.__token : str = token
+        self.__use_sandbox : bool = use_sandbox
+        self.__accounts : list = []
+        self.__client : Client = client
+        self.__account_id : str = None
+        self.__market : str = market
+        self.__data : DataInstruments= DataInstruments(client)
 
 
     def get_accounts(self):
@@ -45,6 +46,14 @@ class User:
             return self.__accounts
         elif self.__market == "Vtb":
             pass
+
+    def create_account(self):
+        '''
+        Создание аккаунта
+        '''
+        acc = self.__client.sandbox.open_sandbox_account()
+        self.__accounts.append(acc)
+
 
     def get_account_id(self):
         """
@@ -122,11 +131,6 @@ class User:
             p = self.__client.sandbox.get_sandbox_portfolio(account_id=account_id).positions
             df = pd.DataFrame([self.__portfolio_pose_todict(pos) for pos in p])
             df = df.set_index("Name")
-            for i in range(len(p)):
-                if p[i].instrument_type == 'currency':
-                    self.__instruments.append(Cash(self.__m_val_to_cur(p[i].quantity), p[i].average_position_price.currency))
-                #if (p[i].instrument_type == 'share'):
-                #    self.__instruments.append(Cash(self.__m_val_to_cur(p[i].quantity), p[i].average_position_price.))
             return df
         elif self.__market == "Vtb":
             pass
@@ -136,7 +140,6 @@ class User:
         Покупаю бумагу по фиги
         '''
         if self.__market == "Tinkoff":
-            df = self.get_portfolio(account_id=self.__account_id)
             dict = self.__data.get_dict()
             if figi not in dict:
                 raise FigiError
@@ -159,15 +162,20 @@ class User:
         Продажа бумаги по figi
         '''
         if self.__market == "Tinkoff":
-            r = self.__client.sandbox.post_sandbox_order(
-                figi=figi,
-                quantity=amount,
-                account_id=account_id,
-                order_id=datetime.now().strftime("%Y-%m-%dT %H:%M:%S"),
-                direction=OrderDirection.ORDER_DIRECTION_SELL,
-                order_type=OrderType.ORDER_TYPE_MARKET
-            )
-            return r
+            dict = self.__data.get_dict()
+            if figi not in dict:
+                raise FigiError
+            try:
+                r = self.__client.sandbox.post_sandbox_order(
+                    figi=figi,
+                    quantity=amount,
+                    account_id=account_id,
+                    order_id=datetime.now().strftime("%Y-%m-%dT %H:%M:%S"),
+                    direction=OrderDirection.ORDER_DIRECTION_SELL,
+                    order_type=OrderType.ORDER_TYPE_MARKET
+                )
+            except:
+                raise AmountError
         elif self.__market == "Vtb":
             pass
 
@@ -176,17 +184,22 @@ class User:
         Лимитная покупка по figi
         '''
         if self.__market == "Tinkoff":
-            q = self.__amount_to_quanity(price)
-            r = self.__client.sandbox.post_sandbox_order(
-                figi=figi,
-                quantity=amount,
-                price=Quotation(units=q[0], nano=q[1]),
-                account_id=account_id,
-                order_id=datetime.now().strftime("%Y-%m-%dT %H:%M:%S"),
-                direction=OrderDirection.ORDER_DIRECTION_BUY,
-                order_type=OrderType.ORDER_TYPE_LIMIT
-            )
-            return r
+            dict = self.__data.get_dict()
+            if figi not in dict:
+                raise FigiError
+            try:
+                q = self.__amount_to_quanity(price)
+                r = self.__client.sandbox.post_sandbox_order(
+                    figi=figi,
+                    quantity=amount,
+                    price=Quotation(units=q[0], nano=q[1]),
+                    account_id=account_id,
+                    order_id=datetime.now().strftime("%Y-%m-%dT %H:%M:%S"),
+                    direction=OrderDirection.ORDER_DIRECTION_BUY,
+                    order_type=OrderType.ORDER_TYPE_LIMIT
+                )
+            except:
+                raise AmountError
         elif self.__market == "Vtb":
             pass
 
@@ -195,17 +208,22 @@ class User:
         Лимтная продажа по figi
         '''
         if self.__market == "Tinkoff":
-            q = self.__amount_to_quanity(price)
-            r = self.__client.sandbox.post_sandbox_order(
-                figi=figi,
-                quantity=amount,
-                price=Quotation(units=q[0], nano=q[1]),
-                account_id=account_id,
-                order_id=datetime.now().strftime("%Y-%m-%dT %H:%M:%S"),
-                direction=OrderDirection.ORDER_DIRECTION_SELL,
-                order_type=OrderType.ORDER_TYPE_LIMIT
-            )
-            return r
+            dict = self.__data.get_dict()
+            if figi not in dict:
+                raise FigiError
+            try:
+                q = self.__amount_to_quanity(price)
+                r = self.__client.sandbox.post_sandbox_order(
+                    figi=figi,
+                    quantity=amount,
+                    price=Quotation(units=q[0], nano=q[1]),
+                    account_id=account_id,
+                    order_id=datetime.now().strftime("%Y-%m-%dT %H:%M:%S"),
+                    direction=OrderDirection.ORDER_DIRECTION_SELL,
+                    order_type=OrderType.ORDER_TYPE_LIMIT
+                )
+            except:
+                raise AmountError
         elif self.__market == "Vtb":
             pass
 
@@ -289,6 +307,8 @@ class User:
         '''
         r = []
         if self.__market == "Tinkoff":
+            if figi not in self.__data.get_dict():
+                raise FigiError
             param = 0
             if day_int > 7:
                 param = CandleInterval.CANDLE_INTERVAL_DAY
@@ -307,4 +327,24 @@ class User:
         elif self.__market == "Vtb":
             pass
 
+    def get_all_figies(self):
+        '''
+        Получение всех figi
+        '''
+        return self.__data.get_data()
 
+    def df_to_url(self, df: pd.DataFrame):
+        '''
+        Получение изображения DataFrame и получение ссылки на него в облаке
+        '''
+        gauth = GoogleAuth()
+        gauth.LocalWebserverAuth()
+        drive = GoogleDrive(gauth)
+        dfi.export(df, "mytable.png")
+        filename = 'mytable.png'
+        file1 = drive.CreateFile({'title': filename})
+        file1.SetContentFile(os.path.join(r'C:\Users\1\PycharmProjects\InvestmentBot',filename))
+        file1.Upload()
+        url = file1['webContentLink']
+        url = url[:len(url) - 16]
+        return url

@@ -34,4 +34,3 @@ class Controller:
 
     async def print_ui(self, chat_id: int, txt: str):
         await self.__ui.print(chat_id, txt)
-

@@ -1,15 +1,16 @@
 import pandas as pd
 class DataInstruments:
     def __init__(self, client):
-        self.__dict = {'FG0000000000': 'Рубль'}
-        self.__currencies = [c.figi for c in client.instruments.currencies().instruments]
+        self.__dict : dict = {'FG0000000000': 'Рубль'}
+        self.__currencies : list = [c.figi for c in client.instruments.currencies().instruments]
         it = [client.instruments.currencies().instruments, client.instruments.shares().instruments,
               client.instruments.bonds().instruments, client.instruments.etfs().instruments, client.instruments.futures().instruments]
         for i in range(len(it)):
             for cur in it[i]:
                 self.__dict[cur.figi] = cur.name
         self.__data = pd.DataFrame(list(self.__dict.items()), columns = ['Figi', 'Name'])
-        self.__data = self.__data.set_index('Figi')
+        self.__data : pd.DataFrame = self.__data.set_index('Figi')
+
     def get_data(self):
         return self.__data
 
