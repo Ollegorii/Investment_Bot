@@ -4,7 +4,7 @@ from tinkoff.invest import Client, RequestError, PortfolioResponse, PositionsRes
 import matplotlib.pyplot as plt
 SANDBOX_TOKEN = "t.Zx3k_Kx4AoPerZe11E7JRSyuWijNSQ-BClojho6m7PgGsUrVY1FVXk9ayjZV64egufFQZ_DLlpTmFilYPh4y7g"
 with Client(SANDBOX_TOKEN) as client:
-    us = User(SANDBOX_TOKEN, client)
+    us = User(SANDBOX_TOKEN, client, gauth=GoogleAuth())
     #us.deposit_usd(563.32)
     #print(client.sandbox.get_sandbox_portfolio(account_id=us.get_account_id()))
     #us.sell(us.get_account_id(), 'BBG004730ZJ9', 1)
@@ -27,6 +27,7 @@ with Client(SANDBOX_TOKEN) as client:
     print(us.get_candels('BBG000BNSZP1', day_int=150))
     #print(us.get_all_figies())
     print(us.df_to_url(df))
+    #us.deleate_file()
     #client.market_data.get_last_prices('BBG000BNSZP1')
     #print(client.market_data.get_last_prices(figi=['BBG000BNSZP1']).last_prices[0].price)
     #us.buy(account_id=id, figi= 'BBG000BNSZP1', amount=1)

@@ -6,3 +6,6 @@ class AmountError(Exception):
 
 class FigiError(Exception):
     pass
+
+class HttpError(Exception):
+    pass

@@ -33,6 +33,7 @@ class User:
         self.__market = market
         self.__data : DataInstruments = DataInstruments(client)
         self.__gauth = gauth
+        self.__files = []
 
     def get_accounts(self):
         """
@@ -339,13 +340,14 @@ class User:
         '''
         Получение изображения DataFrame и получение ссылки на него в облаке
         '''
-        self.__gauth.LocalWebserverAuth()
+        #self.__gauth.LocalWebserverAuth()
         drive = GoogleDrive(self.__gauth)
-        dfi.export(df, "mytable.png")
+        dfi.export(df, 'mytable.png')
         filename = 'mytable.png'
         file1 = drive.CreateFile({'title': filename})
-        file1.SetContentFile(os.path.join(r'C:\Users\mi\PycharmProjects\Investment_Bot',filename))
+        file1.SetContentFile(os.path.join(r'C:\Users\1\PycharmProjects\InvestmentBot',filename))
         file1.Upload()
+        self.__files.append(file1['id'])
         permission = file1.InsertPermission({
             'type': 'anyone',
             'value': 'anyone',
@@ -356,10 +358,12 @@ class User:
         return url
 
     def __png_to_url(self, filename = 'candels.png'):
+        #self.__gauth.LocalWebserverAuth()
         drive = GoogleDrive(self.__gauth)
         file1 = drive.CreateFile({'title': filename})
-        file1.SetContentFile(os.path.join(r'C:\Users\mi\PycharmProjects\Investment_Bot', filename))
+        file1.SetContentFile(os.path.join(r'C:\Users\1\PycharmProjects\InvestmentBot', filename))
         file1.Upload()
+        self.__files.append(file1['id'])
         permission = file1.InsertPermission({
             'type': 'anyone',
             'value': 'anyone',
@@ -367,3 +371,11 @@ class User:
 
         url = file1['alternateLink']  # Display the sharable link.
         return url
+
+    def deleate_file(self):
+        for id in self.__files:
+            drive = GoogleDrive(self.__gauth)
+            file1 = drive.CreateFile({'id': id})
+            file1.Trash()  # Move file to trash.
+            file1.UnTrash()  # Move file out of trash.
+            file1.Delete()  # Permanently delete the file.
