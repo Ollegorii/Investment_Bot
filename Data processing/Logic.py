@@ -8,12 +8,13 @@ from dcs import UpdateObj
 
 
 class Logic:
-    def __init__(self, UI_queue: asyncio.Queue, queue: asyncio.Queue, concurrent_workers: int):
+    def __init__(self, UI_queue: asyncio.Queue, queue: asyncio.Queue, concurrent_workers: int, gauth):
         self.queue = queue
         self.__UI_queue = UI_queue
         self.__users = pd.read_csv('Users.csv', usecols=['user_id', 'token'])
         self.concurrent_workers = concurrent_workers
         self._tasks: List[asyncio.Task] = []
+        self.__gauth = gauth
 
     def print_ui(self, chat_id: int, mes: str):
         self.__UI_queue.put_nowait([chat_id, mes])
@@ -45,8 +46,8 @@ class Logic:
             token = users_to_loc.loc[chat_id].token
             print(token)
             with Client(token) as client:
-                us = User(token, client)
-                portfolio = us.get_portfolio(account_id=us.get_account_id()).to_string()
+                us = User(token, client, gauth=self.__gauth)
+                portfolio = us.df_to_url(us.get_portfolio(account_id=us.get_account_id()))
                 self.print_ui(chat_id, portfolio)
         except:
             self.print_ui(chat_id, "Токен оказался недействительным")
@@ -67,7 +68,7 @@ class Logic:
         token = users_to_loc.loc[chat_id].token
         try:
             with Client(token) as client:
-                us = User(token, client)
+                us = User(token, client, gauth=self.__gauth)
                 us.buy(account_id=us.get_account_id(), figi=figi, amount=int(amount))
                 self.print_ui(chat_id, "Бумага успешно куплена, можешь проверять порфтолио")
         except FigiError:
@@ -87,8 +88,13 @@ class Logic:
         users_to_loc = self.__users.set_index(['user_id'])
         token = users_to_loc.loc[chat_id].token
         try:
-            pass
-            #Функция Богдана с учетом проверки корректности figi
+            users_to_loc = self.__users.set_index(['user_id'])
+            token = users_to_loc.loc[chat_id].token
+            print(token)
+            with Client(token) as client:
+                us = User(token, client, gauth=self.__gauth)
+                url = us.get_candels(figi=figi)
+                self.print_ui(chat_id, url)
         except:
             self.print_ui(chat_id, "Figi оказался недействительным")
 

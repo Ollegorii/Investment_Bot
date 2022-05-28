@@ -24,7 +24,7 @@ pd.set_option('display.max_colwidth', None)
 #def GenerateFileOfInstruments(client):
 
 class User:
-    def __init__(self, token : str, client : Client, use_sandbox=True, market = "Tinkoff"):
+    def __init__(self, token : str, client : Client, gauth, use_sandbox=True, market = "Tinkoff"):
         self.__token = token
         self.__use_sandbox = use_sandbox
         self.__accounts = []
@@ -32,7 +32,7 @@ class User:
         self.__account_id = None
         self.__market = market
         self.__data : DataInstruments = DataInstruments(client)
-
+        self.__gauth = gauth
 
     def get_accounts(self):
         """
@@ -323,7 +323,9 @@ class User:
                 interval=param
             )
             df = self.__create_df_candles(r.candles)
-            mpf.plot(df, type='candle', mav=(10, 20, 40))
+            mpf.plot(df, type='candle', mav=(10, 20, 40), savefig='candels.png')
+            url = self.__png_to_url()
+            return url
         elif self.__market == "Vtb":
             pass
 
@@ -337,14 +339,31 @@ class User:
         '''
         Получение изображения DataFrame и получение ссылки на него в облаке
         '''
-        gauth = GoogleAuth()
-        gauth.LocalWebserverAuth()
-        drive = GoogleDrive(gauth)
+        self.__gauth.LocalWebserverAuth()
+        drive = GoogleDrive(self.__gauth)
         dfi.export(df, "mytable.png")
         filename = 'mytable.png'
         file1 = drive.CreateFile({'title': filename})
         file1.SetContentFile(os.path.join(r'C:\Users\1\PycharmProjects\InvestmentBot',filename))
         file1.Upload()
-        url = file1['webContentLink']
-        url = url[:len(url) - 16]
+        permission = file1.InsertPermission({
+            'type': 'anyone',
+            'value': 'anyone',
+            'role': 'reader'})
+
+        url = file1['alternateLink']  # Display the sharable link.
+        #url = url[:len(url) - 16]
+        return url
+
+    def __png_to_url(self, filename = 'candels.png'):
+        drive = GoogleDrive(self.__gauth)
+        file1 = drive.CreateFile({'title': filename})
+        file1.SetContentFile(os.path.join(r'C:\Users\1\PycharmProjects\InvestmentBot', filename))
+        file1.Upload()
+        permission = file1.InsertPermission({
+            'type': 'anyone',
+            'value': 'anyone',
+            'role': 'reader'})
+
+        url = file1['alternateLink']  # Display the sharable link.
         return url
