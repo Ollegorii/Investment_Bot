@@ -16,8 +16,8 @@ class Logic:
         self._tasks: List[asyncio.Task] = []
         self.__gauth = gauth
 
-    def print_ui(self, chat_id: int, mes: str):
-        self.__UI_queue.put_nowait([chat_id, mes])
+    def print_ui(self, chat_id: int, mes: str, mes_id:int=0): #mes_id: 0 - text, 1 - photo
+        self.__UI_queue.put_nowait([chat_id, mes, mes_id])
 
     async def registration(self, chat_id: int):
         """
@@ -44,11 +44,10 @@ class Logic:
         try:
             users_to_loc = self.__users.set_index(['user_id'])
             token = users_to_loc.loc[chat_id].token
-            print(token)
             with Client(token) as client:
                 us = User(token, client, gauth=self.__gauth)
                 portfolio = us.df_to_url(us.get_portfolio(account_id=us.get_account_id()))
-                self.print_ui(chat_id, portfolio)
+                self.print_ui(chat_id, portfolio, mes_id=1) #mes_id: 0 - text, 1 - photo
         except:
             self.print_ui(chat_id, "Токен оказался недействительным")
 

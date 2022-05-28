@@ -1,12 +1,15 @@
+import BotUser
+
 from typing import Optional
+
 
 import aiohttp
 
 from dcs import GetUpdatesResponse, SendMessageResponse
 
 
-class TgUser:
-    def __init__(self, tg_id: str = ''):
+class TgUser():
+    def __init__(self, tg_id: str = ''): #допилить наследование, написать super
         self.tg_id = tg_id
 
     def get_url(self, method: str):
@@ -38,6 +41,18 @@ class TgUser:
         payload = {
             'chat_id': chat_id,
             'text': text
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as resp:
+                res_dict = await resp.json()
+                return SendMessageResponse.Schema().load(res_dict)
+
+    async def send_photo(self, chat_id: int, photo_url: str) -> object:
+        url = self.get_url("sendPhoto")
+        #print("Photo")
+        payload = {
+            'chat_id': chat_id,
+            'photo': photo_url
         }
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload) as resp:

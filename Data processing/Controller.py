@@ -5,7 +5,7 @@ from TgUser import *
 from Poller import *
 from UI import *
 from dcs import UpdateObj
-from User import *
+
 
 class Controller:
     def __init__(self, token: str, n: int, gauth):
@@ -20,8 +20,9 @@ class Controller:
             upd = await self.__UI_queue.get()
             chat_id = upd[0]
             txt = upd[1]
+            mes_id = upd[2]
             if txt != "":
-                await self.print_ui(chat_id, txt)
+                await self.print_ui(chat_id, txt, mes_id)
 
     async def start(self):
         await self.__poller.start()
@@ -32,5 +33,5 @@ class Controller:
         await self.__poller.stop()
         await self.__logic.stop()
 
-    async def print_ui(self, chat_id: int, txt: str):
-        await self.__ui.print(chat_id, txt)
+    async def print_ui(self, chat_id: int, txt: str, mes_id: int):
+        await self.__ui.print(chat_id, txt, mes_id)
