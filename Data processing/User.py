@@ -339,9 +339,9 @@ class User:
         '''
         Получение изображения DataFrame и получение ссылки на него в облаке
         '''
-        self.__gauth.LocalWebserverAuth()
+        #self.__gauth.LocalWebserverAuth()
         drive = GoogleDrive(self.__gauth)
-        dfi.export(df, "mytable.png")
+        dfi.export(df, 'mytable.png')
         filename = 'mytable.png'
         file1 = drive.CreateFile({'title': filename})
         file1.SetContentFile(os.path.join(r'C:\Users\1\PycharmProjects\InvestmentBot',filename))
@@ -356,6 +356,7 @@ class User:
         return url
 
     def __png_to_url(self, filename = 'candels.png'):
+        #self.__gauth.LocalWebserverAuth()
         drive = GoogleDrive(self.__gauth)
         file1 = drive.CreateFile({'title': filename})
         file1.SetContentFile(os.path.join(r'C:\Users\1\PycharmProjects\InvestmentBot', filename))
