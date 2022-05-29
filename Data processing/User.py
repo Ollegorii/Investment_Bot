@@ -11,6 +11,7 @@ import dataframe_image as dfi
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import os
+from Plot import *
 import time
 # Сброс ограничений на количество выводимых рядов
 pd.set_option('display.max_rows', None)
@@ -24,7 +25,7 @@ pd.set_option('display.max_colwidth', None)
 #def GenerateFileOfInstruments(client):
 
 class User:
-    def __init__(self, token : str, client : Client, gauth, use_sandbox=True, market = "Tinkoff"):
+    def __init__(self, token : str, client : Client, GD, use_sandbox=True, market = "Tinkoff"):
         self.__token = token
         self.__use_sandbox = use_sandbox
         self.__accounts = []
@@ -32,7 +33,10 @@ class User:
         self.__account_id = None
         self.__market = market
         self.__data : DataInstruments = DataInstruments(client)
-        self.__gauth = gauth
+        self.__gauth = GD.get_gauth()
+        self.__files = []
+        self.__plot = Plot('candles')
+        self.__GD = GD
 
     def get_accounts(self):
         """
@@ -259,6 +263,8 @@ class User:
                 if df.size != 0:
                     df = df.set_index('Name')
                     return df
+            else:
+                raise EmptyData
         elif self.__market == "Vtb":
             pass
 
@@ -301,7 +307,7 @@ class User:
         if self.__market == "Vtb":
             pass
 
-    def get_candels(self, figi, day_int = 7):
+    def get_candles(self, figi, day_int = 7):
         '''
         Получаю свечной график
         '''
@@ -323,7 +329,8 @@ class User:
                 interval=param
             )
             df = self.__create_df_candles(r.candles)
-            mpf.plot(df, type='candle', mav=(10, 20, 40), savefig='candels.png')
+            #mpf.plot(df, type='candle', mav=(10, 20, 40), savefig='candels.png')
+            self.__plot.plot_candles(df)
             url = self.__png_to_url()
             return url
         elif self.__market == "Vtb":
@@ -339,31 +346,13 @@ class User:
         '''
         Получение изображения DataFrame и получение ссылки на него в облаке
         '''
-        self.__gauth.LocalWebserverAuth()
-        drive = GoogleDrive(self.__gauth)
-        dfi.export(df, "mytable.png")
+        #self.__gauth.LocalWebserverAuth()
+        dfi.export(df, 'mytable.png')
         filename = 'mytable.png'
-        file1 = drive.CreateFile({'title': filename})
-        file1.SetContentFile(os.path.join(r'C:\Users\mi\PycharmProjects\Investment_Bot',filename))
-        file1.Upload()
-        permission = file1.InsertPermission({
-            'type': 'anyone',
-            'value': 'anyone',
-            'role': 'reader'})
-
-        url = file1['alternateLink']  # Display the sharable link.
+        url = self.__GD.upload(filename)
         #url = url[:len(url) - 16]
         return url
 
-    def __png_to_url(self, filename = 'candels.png'):
-        drive = GoogleDrive(self.__gauth)
-        file1 = drive.CreateFile({'title': filename})
-        file1.SetContentFile(os.path.join(r'C:\Users\mi\PycharmProjects\Investment_Bot', filename))
-        file1.Upload()
-        permission = file1.InsertPermission({
-            'type': 'anyone',
-            'value': 'anyone',
-            'role': 'reader'})
-
-        url = file1['alternateLink']  # Display the sharable link.
+    def __png_to_url(self, filename = 'candles.png'):
+        url = self.__GD.upload(filename)
         return url

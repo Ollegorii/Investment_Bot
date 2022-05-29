@@ -9,3 +9,6 @@ class FigiError(Exception):
 
 class HttpError(Exception):
     pass
+
+class EmptyData(Exception):
+    pass

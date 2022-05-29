@@ -5,16 +5,16 @@ from typing import List
 from User import *
 from Controller import *
 from dcs import UpdateObj
-
+import GDrive
 
 class Logic:
-    def __init__(self, UI_queue: asyncio.Queue, queue: asyncio.Queue, concurrent_workers: int, gauth):
+    def __init__(self, UI_queue: asyncio.Queue, queue: asyncio.Queue, concurrent_workers: int, GD : GDrive):
         self.queue = queue
         self.__UI_queue = UI_queue
         self.__users = pd.read_csv('Users.csv', usecols=['user_id', 'token'])
         self.concurrent_workers = concurrent_workers
         self._tasks: List[asyncio.Task] = []
-        self.__gauth = gauth
+        self.__GD = GD
 
     def print_ui(self, chat_id: int, mes: str, mes_id: int = 0):  # mes_id: 0 - text, 1 - photo
         self.__UI_queue.put_nowait([chat_id, mes, mes_id])
@@ -44,11 +44,14 @@ class Logic:
         try:
             users_to_loc = self.__users.set_index(['user_id'])
             token = users_to_loc.loc[chat_id].token
+            print(token)
             with Client(token) as client:
-                us = User(token, client, gauth=self.__gauth)
+                us = User(token, client, self.__GD)
                 portfolio = us.df_to_url(us.get_portfolio(account_id=us.get_account_id()))
                 self.print_ui(chat_id, portfolio)
                 self.print_ui(chat_id, portfolio, mes_id=1)  # mes_id: 0 - text, 1 - photo
+        except FigiError:
+            self.print_ui(chat_id, "Figi оказался недействительным")
         except:
             self.print_ui(chat_id, "Токен оказался недействительным")
 
@@ -68,13 +71,14 @@ class Logic:
         token = users_to_loc.loc[chat_id].token
         try:
             with Client(token) as client:
-                us = User(token, client, gauth=self.__gauth)
+                us = User(token, client, self.__GD)
                 us.buy(account_id=us.get_account_id(), figi=figi, amount=int(amount))
                 self.print_ui(chat_id, "Бумага успешно куплена, можешь проверять порфтолио")
         except FigiError:
             self.print_ui(chat_id, "Figi оказался недействительным")
         except AmountError:
             self.print_ui(chat_id, "Количество оказалось недействительным")
+
 
     async def plot(self, chat_id: int):
         """
@@ -91,10 +95,11 @@ class Logic:
             token = users_to_loc.loc[chat_id].token
             print(token)
             with Client(token) as client:
-                us = User(token, client, gauth=self.__gauth)
-                url = us.get_candels(figi=figi)
+                us = User(token, client, self.__GD)
+                url = us.get_candles(figi=figi, day_int=150)
                 self.print_ui(chat_id, url)
-                self.print_ui(chat_id, url, mes_id=1)
+                self.print_ui(chat_id, url, mes_id=1) #mes_id: 0 - text, 1 - photo
+                #us.delete_file()
         except:
             self.print_ui(chat_id, "Figi оказался недействительным")
 
@@ -105,7 +110,14 @@ class Logic:
         try:
             users_to_loc = self.__users.set_index(['user_id'])
             token = users_to_loc.loc[chat_id].token
-            # код аллабердина
+            with Client(token) as client:
+                us = User(token, client, self.__GD)
+                df = us.get_orders(us.get_account_id())
+                url = us.df_to_url(df)
+                self.print_ui(chat_id, url)
+                self.print_ui(chat_id, url, mes_id=1) #mes_id: 0 - text, 1 - photo
+        except EmptyData:
+            self.print_ui(chat_id, "Список твоих заявок пуст")
         except:
             self.print_ui(chat_id, "Токен оказался недействительным")
 
@@ -114,8 +126,9 @@ class Logic:
         Функция просит у пользователя figi, количество и стоимость бумаг,
         на которые необходимо выставить заявку на покупку. Затем выставляет заявку
         """
-        self.print_ui(chat_id, "Режим покупки лимитной зявки работает в боте лучше, чем в приложениях. Здесь нет срока на лимитные заявки"
-                               "- она не удалится через сутки, но ты всегда можешь ее отменить командой /cancel_limits")
+        self.print_ui(chat_id,
+                      "Режим покупки лимитной зявки работает в боте лучше, чем в приложениях. Здесь нет срока на лимитные заявки"
+                      "- она не удалится через сутки, но ты всегда можешь ее отменить командой /cancel_limits")
         self.print_ui(chat_id, "Введи figi бумаги, по которой хочешь выставить лимитную заявку")
         upd = await self.queue.get()
         figi = upd.message.text
@@ -123,7 +136,7 @@ class Logic:
         upd = await self.queue.get()
         cnt = upd.message.text
         try:
-            cnt = int(cnt)
+            amount = int(cnt)
         except ValueError:
             self.print_ui(chat_id, "Ты ввел не число. Для еще одной попытке вызови /buy_limits повторно")
             return
@@ -136,8 +149,12 @@ class Logic:
             self.print_ui(chat_id, "Ты ввел не число. Для еще одной попытке вызови /buy_limits повторно")
             return
         try:
-            pass
-            #код аллабердина
+            users_to_loc = self.__users.set_index(['user_id'])
+            token = users_to_loc.loc[chat_id].token
+            with Client(token) as client:
+                us = User(token, client, self.__GD)
+                us.buy_limit(account_id=us.get_account_id(), figi=figi, amount=int(amount), price=price)
+                self.print_ui(chat_id, "Заявка успешно создана")
         except:
             self.print_ui(chat_id, "Figi оказался недействительным")
 
@@ -156,7 +173,7 @@ class Logic:
         upd = await self.queue.get()
         cnt = upd.message.text
         try:
-            cnt = int(cnt)
+            amount = int(cnt)
         except ValueError:
             self.print_ui(chat_id, "Ты ввел не число. Для еще одной попытке вызови /sell_limits повторно")
             return
@@ -169,8 +186,12 @@ class Logic:
             self.print_ui(chat_id, "Ты ввел не число. Для еще одной попытке вызови /sell_limits повторно")
             return
         try:
-            pass
-            # код аллабердина
+            users_to_loc = self.__users.set_index(['user_id'])
+            token = users_to_loc.loc[chat_id].token
+            with Client(token) as client:
+                us = User(token, client, self.__GD)
+                us.sell_limit(account_id=us.get_account_id(), figi=figi, amount=int(amount), price=price)
+                self.print_ui(chat_id, "Заявка успешно создана")
         except:
             self.print_ui(chat_id, "Figi оказался недействительным")
 
@@ -181,7 +202,14 @@ class Logic:
         num = upd.message.text
         try:
             num = int(num)
-            #код аллабердина
+            users_to_loc = self.__users.set_index(['user_id'])
+            token = users_to_loc.loc[chat_id].token
+            with Client(token) as client:
+                us = User(token, client, self.__GD)
+                us.cancel_order_by_number(us.get_account_id(), num)
+                self.print_ui(chat_id, "Заявка успешно отменена")
+        except InputError:
+            self.print_ui(chat_id, "Ты ввел некоректный номер заявки")
         except ValueError:
             self.print_ui(chat_id, "Ты ввел не число, нужен номер лимитной заявки")
         except:
@@ -216,6 +244,7 @@ class Logic:
         while True:
             upd = await self.queue.get()
             chat_id = upd.message.chat.id
+            #print(upd)
             try:
                 await self.distribution(upd)
             finally:

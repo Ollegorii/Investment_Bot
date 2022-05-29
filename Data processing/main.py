@@ -2,9 +2,11 @@ from Logic import *
 from User import *
 from tinkoff.invest import Client, RequestError, PortfolioResponse, PositionsResponse, PortfolioPosition
 import matplotlib.pyplot as plt
+from GDrive import *
 SANDBOX_TOKEN = "t.Zx3k_Kx4AoPerZe11E7JRSyuWijNSQ-BClojho6m7PgGsUrVY1FVXk9ayjZV64egufFQZ_DLlpTmFilYPh4y7g"
 with Client(SANDBOX_TOKEN) as client:
-    us = User(SANDBOX_TOKEN, client, gauth=GoogleAuth())
+    GD = GDrive()
+    us = User(SANDBOX_TOKEN, client, GD)
     #us.deposit_usd(563.32)
     #print(client.sandbox.get_sandbox_portfolio(account_id=us.get_account_id()))
     #us.sell(us.get_account_id(), 'BBG004730ZJ9', 1)
@@ -24,9 +26,10 @@ with Client(SANDBOX_TOKEN) as client:
     '''
     #us.buy(account_id=id, figi='BBG000BNSZP1', amount=1)
     #print(us.get_orders(account_id=id))
-    print(us.get_candels('BBG000BNSZP1', day_int=150))
+    print(us.get_candles('BBG000BNSZP1', day_int=150))
     #print(us.get_all_figies())
     print(us.df_to_url(df))
+    #GD.delete_file()
     #us.deleate_file()
     #client.market_data.get_last_prices('BBG000BNSZP1')
     #print(client.market_data.get_last_prices(figi=['BBG000BNSZP1']).last_prices[0].price)

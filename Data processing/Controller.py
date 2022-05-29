@@ -1,19 +1,18 @@
 from queue import Queue
-
 from Logic import *
 from TgUser import *
 from Poller import *
 from UI import *
 from dcs import UpdateObj
 
-
 class Controller:
-    def __init__(self, token: str, n: int, gauth):
+    def __init__(self, token: str, n: int, GD):
         self.__queue = asyncio.Queue()
         self.__UI_queue = asyncio.Queue()
-        self.__logic = Logic(self.__UI_queue, self.__queue, n, gauth=gauth)
+        self.__logic = Logic(self.__UI_queue, self.__queue, n, GD)
         self.__poller = Poller(token, self.__queue)
         self.__ui = UI(token)
+        #print("барсучий богдан аллабердин хых")
 
     async def contr_cycle(self):
         while True:
