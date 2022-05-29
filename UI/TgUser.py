@@ -1,4 +1,4 @@
-import BotUser
+from BotUser import *
 
 from typing import Optional
 
@@ -8,12 +8,12 @@ import aiohttp
 from dcs import GetUpdatesResponse, SendMessageResponse
 
 
-class TgUser():
-    def __init__(self, tg_id: str = ''): #допилить наследование, написать super
-        self.tg_id = tg_id
+class TgUser(BotUser):
+    def __init__(self, bot_id):#допилить наследование, написать super
+        super().__init__(bot_id)
 
     def get_url(self, method: str):
-        return f"https://api.telegram.org/bot{self.tg_id}/{method}"
+        return f"https://api.telegram.org/bot{self.bot_id}/{method}"
 
     async def get_me(self) -> dict:
         url = self.get_url("getMe")
@@ -49,10 +49,11 @@ class TgUser():
 
     async def send_photo(self, chat_id: int, photo_url: str) -> object:
         url = self.get_url("sendPhoto")
-        #print("Photo")
         payload = {
             'chat_id': chat_id,
-            'photo': photo_url
+            'photo': photo_url,
+            'parse_mode': 'Markdown',
+            'disable_web_page_preview': 'true',
         }
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload) as resp:

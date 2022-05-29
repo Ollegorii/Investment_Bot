@@ -11,7 +11,7 @@ class Controller:
     def __init__(self, token: str, n: int, gauth):
         self.__queue = asyncio.Queue()
         self.__UI_queue = asyncio.Queue()
-        self.__logic = Logic(self.__UI_queue, self.__queue, n, gauth = gauth)
+        self.__logic = Logic(self.__UI_queue, self.__queue, n, gauth=gauth)
         self.__poller = Poller(token, self.__queue)
         self.__ui = UI(token)
 
