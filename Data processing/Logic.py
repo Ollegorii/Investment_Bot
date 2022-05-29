@@ -7,8 +7,9 @@ from Controller import *
 from dcs import UpdateObj
 import GDrive
 
+
 class Logic:
-    def __init__(self, UI_queue: asyncio.Queue, queue: asyncio.Queue, concurrent_workers: int, GD : GDrive):
+    def __init__(self, UI_queue: asyncio.Queue, queue: asyncio.Queue, concurrent_workers: int, GD: GDrive):
         self.queue = queue
         self.__UI_queue = UI_queue
         self.__users = pd.read_csv('Users.csv', usecols=['user_id', 'token'])
@@ -26,15 +27,16 @@ class Logic:
         Таким образом сопоставляем chat_id и токен в Инвестициях.
         """
         if await self.find_id(chat_id):
-            self.print_ui(chat_id, "Ты уже зарегистрирован!")
+            self.print_ui(chat_id,
+                          "Ты уже зарегистрирован!\nЕсли хочешь поменять токен, используй функцию /change_token")
             return
         self.print_ui(chat_id, "Введи свой инвестиционный токен")
         upd = await self.queue.get()
-        while True:
-            token = upd.message.text
-            await self.add_token(chat_id, token)
-            self.print_ui(chat_id, "Записал😉")
-            return
+        # while True:
+        token = upd.message.text
+        await self.add_token(chat_id, token)
+        self.print_ui(chat_id, "Записал😉")
+        # return
 
     async def get_portfolio(self, chat_id: int):
         """
@@ -53,7 +55,8 @@ class Logic:
         except FigiError:
             self.print_ui(chat_id, "Figi оказался недействительным")
         except:
-            self.print_ui(chat_id, "Токен оказался недействительным")
+            self.print_ui(chat_id, "Токен оказался недействительным"
+                                   "\nЕсли хочешь поменять токен, используй функцию /change_token")
 
     async def buy_paper(self, chat_id: int):
         """
@@ -78,7 +81,9 @@ class Logic:
             self.print_ui(chat_id, "Figi оказался недействительным")
         except AmountError:
             self.print_ui(chat_id, "Количество оказалось недействительным")
-
+        except:
+            self.print_ui(chat_id, "Токен оказался недействительным"
+                                   "\nЕсли хочешь поменять токен, используй функцию /change_token")
 
     async def plot(self, chat_id: int):
         """
@@ -98,8 +103,7 @@ class Logic:
                 us = User(token, client, self.__GD)
                 url = us.get_candles(figi=figi, day_int=150)
                 self.print_ui(chat_id, url)
-                self.print_ui(chat_id, url, mes_id=1) #mes_id: 0 - text, 1 - photo
-                #us.delete_file()
+                self.print_ui(chat_id, url, mes_id=1)  # mes_id: 0 - text, 1 - photo
         except:
             self.print_ui(chat_id, "Figi оказался недействительным")
 
@@ -115,11 +119,12 @@ class Logic:
                 df = us.get_orders(us.get_account_id())
                 url = us.df_to_url(df)
                 self.print_ui(chat_id, url)
-                self.print_ui(chat_id, url, mes_id=1) #mes_id: 0 - text, 1 - photo
+                self.print_ui(chat_id, url, mes_id=1)  # mes_id: 0 - text, 1 - photo
         except EmptyData:
             self.print_ui(chat_id, "Список твоих заявок пуст")
         except:
-            self.print_ui(chat_id, "Токен оказался недействительным")
+            self.print_ui(chat_id, "Токен оказался недействительным"
+                                   "\nЕсли хочешь поменять токен, используй функцию /change_token")
 
     async def buy_limit(self, chat_id: int):
         """
@@ -128,7 +133,7 @@ class Logic:
         """
         self.print_ui(chat_id,
                       "Режим покупки лимитной зявки работает в боте лучше, чем в приложениях. Здесь нет срока на лимитные заявки"
-                      "- она не удалится через сутки, но ты всегда можешь ее отменить командой /cancel_limits")
+                      " - она не удалится через сутки, но ты всегда можешь ее отменить командой /cancel_limits")
         self.print_ui(chat_id, "Введи figi бумаги, по которой хочешь выставить лимитную заявку")
         upd = await self.queue.get()
         figi = upd.message.text
@@ -165,7 +170,7 @@ class Logic:
         """
         self.print_ui(chat_id,
                       "Режим покупки лимитной зявки работает в боте лучше, чем в приложениях. Здесь нет срока на лимитные заявки"
-                      "- она не удалится через сутки, но ты всегда можешь ее отменить командой /cancel_limits")
+                      " - она не удалится через сутки, но ты всегда можешь ее отменить командой /cancel_limits")
         self.print_ui(chat_id, "Введи figi бумаги, по которой хочешь выставить лимитную заявку")
         upd = await self.queue.get()
         figi = upd.message.text
@@ -196,7 +201,10 @@ class Logic:
             self.print_ui(chat_id, "Figi оказался недействительным")
 
     async def cancel_limit(self, chat_id: int):
-        self.print_ui(chat_id, "Введи номер лимитной заявки, которую нужно отменить/n"
+        """
+        Отмена лимитной заявки по номеру из списка заявок
+        """
+        self.print_ui(chat_id, "Введи номер лимитной заявки, которую нужно отменить\n"
                                "Номер заявки можно посмтотреть в списке заявок командой /limits")
         upd = await self.queue.get()
         num = upd.message.text
@@ -214,6 +222,16 @@ class Logic:
             self.print_ui(chat_id, "Ты ввел не число, нужен номер лимитной заявки")
         except:
             self.print_ui(chat_id, "Что-то пошло не так")
+
+    async def change_token(self, chat_id: int):
+        self.print_ui(chat_id, "Введи новый инвестиционный токен")
+        upd = await self.queue.get()
+        token = upd.message.text
+        users_to_loc = self.__users.set_index(['user_id'])
+        users_to_loc.loc[chat_id].token = token
+        self.__users = users_to_loc.reset_index()
+        self.print_ui(chat_id, "Записал😉")
+        self.__users.to_csv('Users.csv')
 
     async def distribution(self, upd: UpdateObj):
         mes = upd.message.text
@@ -237,6 +255,8 @@ class Logic:
             await self.sell_limit(chat_id)
         elif mes == "/cancel_limits":
             await self.cancel_limit(chat_id)
+        elif mes == "/change_token":
+            await self.change_token(chat_id)
         else:
             self.print_ui(chat_id, "Попробуй воспользоваться функциями из меню")
 
@@ -244,7 +264,6 @@ class Logic:
         while True:
             upd = await self.queue.get()
             chat_id = upd.message.chat.id
-            #print(upd)
             try:
                 await self.distribution(upd)
             finally:
@@ -261,7 +280,7 @@ class Logic:
     async def add_token(self, user_id: int, token=0):
         self.__users = self.__users.append({'user_id': user_id, 'token': token}, ignore_index=True)
         print(self.__users)
-        # self.__users.to_csv('Users.csv')
+        self.__users.to_csv('Users.csv')
 
     async def find_id(self, user_id: int):
         return any(self.__users.user_id == user_id)

@@ -52,6 +52,7 @@ class TgUser(BotUser):
         payload = {
             'chat_id': chat_id,
             'photo': photo_url,
+            #'caption' : "Фоточка, а на ней красоточка",
             'parse_mode': 'Markdown',
             'disable_web_page_preview': 'true',
         }
