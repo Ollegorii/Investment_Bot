@@ -16,7 +16,7 @@ class Logic:
         self._tasks: List[asyncio.Task] = []
         self.__gauth = gauth
 
-    def print_ui(self, chat_id: int, mes: str, mes_id:int=0): #mes_id: 0 - text, 1 - photo
+    def print_ui(self, chat_id: int, mes: str, mes_id: int = 0):  # mes_id: 0 - text, 1 - photo
         self.__UI_queue.put_nowait([chat_id, mes, mes_id])
 
     async def registration(self, chat_id: int):
@@ -47,7 +47,8 @@ class Logic:
             with Client(token) as client:
                 us = User(token, client, gauth=self.__gauth)
                 portfolio = us.df_to_url(us.get_portfolio(account_id=us.get_account_id()))
-                self.print_ui(chat_id, portfolio, mes_id=1) #mes_id: 0 - text, 1 - photo
+                self.print_ui(chat_id, portfolio)
+                self.print_ui(chat_id, portfolio, mes_id=1)  # mes_id: 0 - text, 1 - photo
         except:
             self.print_ui(chat_id, "Токен оказался недействительным")
 
@@ -75,7 +76,6 @@ class Logic:
         except AmountError:
             self.print_ui(chat_id, "Количество оказалось недействительным")
 
-
     async def plot(self, chat_id: int):
         """
         Выводим график бумаги по figi пользователю с токеном,
@@ -93,9 +93,99 @@ class Logic:
             with Client(token) as client:
                 us = User(token, client, gauth=self.__gauth)
                 url = us.get_candels(figi=figi)
+                self.print_ui(chat_id, url)
                 self.print_ui(chat_id, url, mes_id=1)
         except:
             self.print_ui(chat_id, "Figi оказался недействительным")
+
+    async def get_limits(self, chat_id: int):
+        """
+        Функция получает и выводит список лимитных заявок
+        """
+        try:
+            users_to_loc = self.__users.set_index(['user_id'])
+            token = users_to_loc.loc[chat_id].token
+            # код аллабердина
+        except:
+            self.print_ui(chat_id, "Токен оказался недействительным")
+
+    async def buy_limit(self, chat_id: int):
+        """
+        Функция просит у пользователя figi, количество и стоимость бумаг,
+        на которые необходимо выставить заявку на покупку. Затем выставляет заявку
+        """
+        self.print_ui(chat_id, "Режим покупки лимитной зявки работает в боте лучше, чем в приложениях. Здесь нет срока на лимитные заявки"
+                               "- она не удалится через сутки, но ты всегда можешь ее отменить командой /cancel_limits")
+        self.print_ui(chat_id, "Введи figi бумаги, по которой хочешь выставить лимитную заявку")
+        upd = await self.queue.get()
+        figi = upd.message.text
+        self.print_ui(chat_id, "Введи желаемое к покупке количество бумаг")
+        upd = await self.queue.get()
+        cnt = upd.message.text
+        try:
+            cnt = int(cnt)
+        except ValueError:
+            self.print_ui(chat_id, "Ты ввел не число. Для еще одной попытке вызови /buy_limits повторно")
+            return
+        self.print_ui(chat_id, "Введи цену, по которой желаешь купить бумагу")
+        upd = await self.queue.get()
+        price = upd.message.text
+        try:
+            price = int(price)
+        except ValueError:
+            self.print_ui(chat_id, "Ты ввел не число. Для еще одной попытке вызови /buy_limits повторно")
+            return
+        try:
+            pass
+            #код аллабердина
+        except:
+            self.print_ui(chat_id, "Figi оказался недействительным")
+
+    async def sell_limit(self, chat_id: int):
+        """
+        Функция просит у пользователя figi, количество и стоимость бумаг,
+        на которые необходимо выставить заявку на продажу. Затем выставляет заявку
+        """
+        self.print_ui(chat_id,
+                      "Режим покупки лимитной зявки работает в боте лучше, чем в приложениях. Здесь нет срока на лимитные заявки"
+                      "- она не удалится через сутки, но ты всегда можешь ее отменить командой /cancel_limits")
+        self.print_ui(chat_id, "Введи figi бумаги, по которой хочешь выставить лимитную заявку")
+        upd = await self.queue.get()
+        figi = upd.message.text
+        self.print_ui(chat_id, "Введи желаемое к продаже количество бумаг")
+        upd = await self.queue.get()
+        cnt = upd.message.text
+        try:
+            cnt = int(cnt)
+        except ValueError:
+            self.print_ui(chat_id, "Ты ввел не число. Для еще одной попытке вызови /sell_limits повторно")
+            return
+        self.print_ui(chat_id, "Введи цену, по которой желаешь продать бумагу")
+        upd = await self.queue.get()
+        price = upd.message.text
+        try:
+            price = int(price)
+        except ValueError:
+            self.print_ui(chat_id, "Ты ввел не число. Для еще одной попытке вызови /sell_limits повторно")
+            return
+        try:
+            pass
+            # код аллабердина
+        except:
+            self.print_ui(chat_id, "Figi оказался недействительным")
+
+    async def cancel_limit(self, chat_id: int):
+        self.print_ui(chat_id, "Введи номер лимитной заявки, которую нужно отменить/n"
+                               "Номер заявки можно посмтотреть в списке заявок командой /limits")
+        upd = await self.queue.get()
+        num = upd.message.text
+        try:
+            num = int(num)
+            #код аллабердина
+        except ValueError:
+            self.print_ui(chat_id, "Ты ввел не число, нужен номер лимитной заявки")
+        except:
+            self.print_ui(chat_id, "Что-то пошло не так")
 
     async def distribution(self, upd: UpdateObj):
         mes = upd.message.text
@@ -111,6 +201,14 @@ class Logic:
             await self.buy_paper(chat_id)
         elif mes == "/plot":
             await self.plot(chat_id)
+        elif mes == "/limits":
+            await self.get_limits(chat_id)
+        elif mes == "/buy_limits":
+            await self.buy_limit(chat_id)
+        elif mes == "/sell_limits":
+            await self.sell_limit(chat_id)
+        elif mes == "/cancel_limits":
+            await self.cancel_limit(chat_id)
         else:
             self.print_ui(chat_id, "Попробуй воспользоваться функциями из меню")
 
