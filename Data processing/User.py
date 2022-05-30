@@ -92,7 +92,7 @@ class User:
             'quantity': self.__m_val_to_cur(p.quantity),
             'instrument_type': p.instrument_type,
             'currency': p.average_position_price.currency,
-            'nkd': self.__m_val_to_cur(p.current_nkd),
+            'exp_yield': self.__m_val_to_cur(p.expected_yield),
         }
         return r
 
