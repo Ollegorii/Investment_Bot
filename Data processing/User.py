@@ -340,14 +340,16 @@ class User:
         '''
         Получение всех figi
         '''
-        return self.__data.get_data()
+        self.__data.get_data().to_csv('figies.csv')
+        url = self.__GD.upload('figies.csv')
+        return url
 
     def df_to_url(self, df: pd.DataFrame):
         '''
         Получение изображения DataFrame и получение ссылки на него в облаке
         '''
         #self.__gauth.LocalWebserverAuth()
-        dfi.export(df, 'mytable.png')
+        dfi.export(df, 'mytable.png', max_rows=-1)
         filename = 'mytable.png'
         url = self.__GD.upload(filename)
         #url = url[:len(url) - 16]
@@ -356,3 +358,14 @@ class User:
     def __png_to_url(self, filename = 'candles.png'):
         url = self.__GD.upload(filename)
         return url
+
+    def get_last_price(self, figi):
+        if figi not in self.__data.get_dict():
+            raise FigiError
+        else:
+            r = self.__client.market_data.get_last_prices(figi=[figi])
+            q = r.last_prices[0].price
+            currency = self.__data.get_figi_cur()[figi]
+            val = self.__m_val_to_cur(q)
+            c = '$' if currency == 'usd' else '₽'
+            return f'{val} {c}'

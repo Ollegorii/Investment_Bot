@@ -11,8 +11,8 @@ with Client(SANDBOX_TOKEN) as client:
     #print(client.sandbox.get_sandbox_portfolio(account_id=us.get_account_id()))
     #us.sell(us.get_account_id(), 'BBG004730ZJ9', 1)
     id = us.get_account_id()
-    df = us.get_portfolio(us.get_account_id())
-    print(df)
+    #df = us.get_portfolio(us.get_account_id())
+    #print(df)
     #print(client.instruments.shares())
     #print(us.search('BBG000BNSZP1')) #MacDonalds
     #us.buy_limit(account_id=id, figi='BBG0013HGFT4', amount=1, price=70)
@@ -24,11 +24,12 @@ with Client(SANDBOX_TOKEN) as client:
     except InputError:
         print('Номер запроса больше чем их кол-во')
     '''
+    print(us.get_last_price('BBG004730ZJ9'))
     #us.buy(account_id=id, figi='BBG000BNSZP1', amount=1)
     #print(us.get_orders(account_id=id))
-    print(us.get_candles('BBG000BNSZP1', day_int=150))
-    #print(us.get_all_figies())
-    print(us.df_to_url(df))
+    #print(us.get_candles('BBG000BNSZP1', day_int=150))
+    #us.get_all_figies()
+    #print(GD.upload('figies.csv'))
     #GD.delete_file()
     #us.deleate_file()
     #client.market_data.get_last_prices('BBG000BNSZP1')

@@ -21,13 +21,12 @@ class GDrive:
             file1.UnTrash()  # Move file out of trash.
             file1.Delete()  # Permanently delete the file.
 
-    def upload(self, filename):
+    def upload(self, filename, download = 1):
         drive = GoogleDrive(self.__gauth)
         file1 = drive.CreateFile({'title': filename})
         file1.SetContentFile(os.path.join(r'C:\Users\1\PycharmProjects\InvestmentBot', filename))
         file1.Upload()
-        self.add_file(file1['id'])
-        # self.__files.append(file1['id'])
+        if download == 1: self.add_file(file1['id'])
         permission = file1.InsertPermission({
             'type': 'anyone',
             'value': 'anyone',

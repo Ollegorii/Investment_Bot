@@ -16,6 +16,7 @@ def run():
         print('bot started')
         loop.run_forever()
     except:
+        GD.delete_file()
         print("\nstopping")
         loop.run_until_complete(bot.stop())
         print('bot stopped')
