@@ -223,7 +223,21 @@ class Logic:
         except:
             self.print_ui(chat_id, "Что-то пошло не так")
 
+    async def get_figi(self, chat_id: int):
+        """
+        Посылает пользователю список всех бумаг и их figi,
+        ведь в интеренете их найти порой сложно
+        """
+        self.print_ui(chat_id, "Сейчас пришлю тебе список всех бумаг и их figi. "
+                               "Воспользуйся поиском по файлу, чтобы найти нужную бумагу.")
+
+
+
     async def change_token(self, chat_id: int):
+        """
+        Изменяет инвестиционный токен уже зарегистрированного
+        пользователя (если вдруг ввел неверный)
+        """
         self.print_ui(chat_id, "Введи новый инвестиционный токен")
         upd = await self.queue.get()
         token = upd.message.text
@@ -255,6 +269,8 @@ class Logic:
             await self.sell_limit(chat_id)
         elif mes == "/cancel_limits":
             await self.cancel_limit(chat_id)
+        elif mes == "/get_figi":
+            await self.get_figi(chat_id)
         elif mes == "/change_token":
             await self.change_token(chat_id)
         else:
