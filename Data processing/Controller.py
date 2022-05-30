@@ -6,12 +6,12 @@ from UI import *
 from dcs import UpdateObj
 
 class Controller:
-    def __init__(self, token: str, n: int, GD):
+    def __init__(self, bot_token: str, n: int, GD):
         self.__queue = asyncio.Queue()
         self.__UI_queue = asyncio.Queue()
         self.__logic = Logic(self.__UI_queue, self.__queue, n, GD)
-        self.__poller = Poller(token, self.__queue)
-        self.__ui = UI(token)
+        self.__poller = Poller(bot_token, self.__queue)
+        self.__ui = UI(bot_token)
 
     async def contr_cycle(self):
         while True:

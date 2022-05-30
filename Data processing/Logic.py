@@ -85,6 +85,47 @@ class Logic:
             self.print_ui(chat_id, "Токен оказался недействительным"
                                    "\nЕсли хочешь поменять токен, используй функцию /change_token")
 
+    async def sell_paper(self, chat_id: int):
+        """
+        Продаем инвестиционную бумагу по figi пользователю с токеном,
+        найденном в Users.csv по chat_id
+        """
+        self.print_ui(chat_id, "Укажи figi бумаги, которую хочешь продать")
+        upd = await self.queue.get()
+        figi = upd.message.text
+        self.print_ui(chat_id, f"Укажи количество бумаг с figi: {figi}, которое ты хочешь продать")
+        upd = await self.queue.get()
+        amount = upd.message.text
+        users_to_loc = self.__users.set_index(['user_id'])
+        token = users_to_loc.loc[chat_id].token
+        try:
+            pass
+            #КОД АЛЛАБЕРДИНА
+        except FigiError:
+            self.print_ui(chat_id, "Figi оказался недействительным")
+        except AmountError:
+            self.print_ui(chat_id, "Количество оказалось недействительным")
+        except:
+            self.print_ui(chat_id, "Токен оказался недействительным"
+                                   "\nЕсли хочешь поменять токен, используй функцию /change_token")
+
+    async def last_price(self, chat_id: int):
+        """
+        Функция получает с биржи последнюю цену бумаги
+        с указанным figi и её выводит пользователю
+        """
+        self.print_ui(chat_id, "Укажи figi бумаги, цену которой хочешь узнать\n"
+                               "Увидеть список бумаг и их figi можно с помощнью /get_figi")
+        upd = await self.queue.get()
+        figi = upd.message.text
+        if figi == "/get_figi":
+            await self.get_figi(chat_id)
+            return
+        try:
+            pass
+        except:
+            pass
+
     async def plot(self, chat_id: int):
         """
         Выводим график бумаги по figi пользователю с токеном,
@@ -259,8 +300,12 @@ class Logic:
             await self.get_portfolio(chat_id)
         elif mes == "/buy":
             await self.buy_paper(chat_id)
+        elif mes == "sell":
+            await self.sell_paper(chat_id)
         elif mes == "/plot":
             await self.plot(chat_id)
+        elif mes == '/last_price':
+            await self.last_price(chat_id)
         elif mes == "/limits":
             await self.get_limits(chat_id)
         elif mes == "/buy_limits":
