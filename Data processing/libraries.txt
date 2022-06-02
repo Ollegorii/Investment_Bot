@@ -1,0 +1,6 @@
+dataframe_image version 0.1.1 	pip install dataframe-image
+PyDrive 	pip install PyDrive
+tinvest 	pip install tinvest
+mplfinance pip install mplfinance
+pandas pip install pandas
+
